@@ -8,9 +8,10 @@ html
   body
     h1 Snap Chat! 
 
-    video#video
-    button#startButton Take photo
-    canvas#canvas
+    video(id='localVideo' autoplay)
+    video(id='remoteVideo' autoplay)
+    button#callButton Make a call
+
     script(src='jquery/jquery.js')
     script(src='socket.io/socket.io.js')
     script(src='app.js')

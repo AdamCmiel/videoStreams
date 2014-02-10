@@ -1,89 +1,81 @@
-var socket = io.connect('http://localhost')
+var localStream, localPeerConnection, remotePeerConnection;
 
-var $sendButton = $('#sendButton');
-var $sendText   = $('#sendText');
+var localVideo = document.getElementById("localVideo");
+var remoteVideo = document.getElementById("remoteVideo");
 
-$sendButton.on('click', function(e){
-  e.preventDefault();
-  socket.emit('messageText', $sendText.val())
-  console.log($sendText.val())
-});
+var callButton = document.getElementById("callButton");
 
-socket.on('connect', function(data){
-  socket.emit('hello');
-});
+callButton.disabled = true;
+callButton.onclick = call;
 
-socket.on('newUser', function(data){
-  console.log('newUser');
-});
+navigator.getUserMedia = navigator.getUserMedia ||
+    navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+  navigator.getUserMedia({audio:true, video:true}, gotStream, //note that we are adding both audio and video
+    function(error) {
+      console.log(error);
+    });
+//Everything above this line should be familiar from the previous example
+function gotStream(stream){
+  localVideo.src = URL.createObjectURL(stream);
+  localStream = stream;
+  callButton.disabled = false;
+}
 
-socket.on('messageFromServer', function(data){
-  console.log(data);
-});
+function call() {
+  callButton.disabled = true;
 
-socket.on('pictureFromServer', function(data){
-  console.log(data);
-  $('<img>').attr('src', data).appendTo($('body'));
-});
-
-// From MDN
-
-(function() {
-
-  var streaming = false,
-      video        = document.querySelector('#video'),
-      canvas       = document.querySelector('#canvas'),
-      photo        = document.querySelector('#photo'),
-      startbutton  = document.querySelector('#startButton'),
-      width = 320,
-      height = 0;
-
-  navigator.getMedia = ( navigator.getUserMedia ||
-                         navigator.webkitGetUserMedia ||
-                         navigator.mozGetUserMedia ||
-                         navigator.msGetUserMedia);
-
-  navigator.getMedia(
-    {
-      video: true,
-      audio: true
-    },
-    function(stream) {
-      if (navigator.mozGetUserMedia) {
-        video.mozSrcObject = stream;
-      } else {
-        var vendorURL = window.URL || window.webkitURL;
-        video.src = vendorURL.createObjectURL(stream);
-      }
-      video.play();
-    },
-    function(err) {
-      console.log("An error occured! " + err);
-    }
-  );
-
-  video.addEventListener('canplay', function(ev){
-    if (!streaming) {
-      height = video.videoHeight / (video.videoWidth/width);
-      video.setAttribute('width', width);
-      video.setAttribute('height', height);
-      canvas.setAttribute('width', width);
-      canvas.setAttribute('height', height);
-      streaming = true;
-    }
-  }, false);
-
-  function takepicture() {
-    canvas.width = width;
-    canvas.height = height;
-    canvas.getContext('2d').drawImage(video, 0, 0, width, height);
-    var data = canvas.toDataURL('image/png');
-    socket.emit('picture', data);
+  if (localStream.getVideoTracks().length > 0) {
+    console.log('Using video device: ' + localStream.getVideoTracks()[0].label);
+  }
+  if (localStream.getAudioTracks().length > 0) {
+    console.log('Using audio device: ' + localStream.getAudioTracks()[0].label);
   }
 
-  startbutton.addEventListener('click', function(ev){
-      takepicture();
-      ev.preventDefault();
-  }, false);
+  var servers = null;
 
-})();
+  localPeerConnection = new webkitRTCPeerConnection(servers);
+  console.log(localPeerConnection)
+  console.log("Created local peer connection object localPeerConnection");
+  localPeerConnection.onicecandidate = gotLocalIceCandidate;
+
+  remotePeerConnection = new webkitRTCPeerConnection(servers);
+  console.log("Created remote peer connection object remotePeerConnection");
+  remotePeerConnection.onicecandidate = gotRemoteIceCandidate;
+  remotePeerConnection.onaddstream = gotRemoteStream;
+
+  localPeerConnection.addStream(localStream);
+  console.log("Added localStream to localPeerConnection");
+  localPeerConnection.createOffer(gotLocalDescription);
+}
+
+function gotLocalDescription(description){
+  localPeerConnection.setLocalDescription(description);
+  console.log("Offer from localPeerConnection: \n" + description.sdp);
+  remotePeerConnection.setRemoteDescription(description);
+  remotePeerConnection.createAnswer(gotRemoteDescription);
+}
+
+function gotRemoteDescription(description){
+  remotePeerConnection.setLocalDescription(description);
+  console.log("Answer from remotePeerConnection: \n" + description.sdp);
+  localPeerConnection.setRemoteDescription(description);
+}
+
+function gotRemoteStream(event){
+  remoteVideo.src = URL.createObjectURL(event.stream);
+  console.log("Received remote stream");
+}
+
+function gotLocalIceCandidate(event){
+  if (event.candidate) {
+    remotePeerConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
+    console.log("Local ICE candidate: \n" + event.candidate.candidate);
+  }
+}
+
+function gotRemoteIceCandidate(event){
+  if (event.candidate) {
+    localPeerConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
+    console.log("Remote ICE candidate: \n " + event.candidate.candidate);
+  }
+}
