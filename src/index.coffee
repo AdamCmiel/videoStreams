@@ -1,21 +1,22 @@
-express = require("express")
 fs = require("fs")
-require('coffee-script')
+http = require("http")
 
-# passport = require("passport")
-# FacebookStrategy = require("passport-facebook").Strategy
-
-# stylus = require("stylus")
-# nib = require("nib")
-
-#declare app variable
+coffee = require('coffee-script')
+express = require("express")
 app = express()
+
+port = process.env.PORT or 5000
+server = app.listen port, ->
+  console.log "Listening on " + port
+
+io = require("socket.io").listen(server)
 
 #middleware stack
 app.configure ->
   app.use express.bodyParser()
   app.use express.static(__dirname + "/public")
   app.use app.router
+  app.use express.favicon()
   app.set "views", __dirname + "/views"
   app.set "view engine", "jade"
   # app.use stylus.middleware(
@@ -26,14 +27,19 @@ app.configure ->
 
 app.use express.logger()
 
-port = process.env.PORT or 5000
-app.listen port, ->
-  console.log "Listening on " + port
-
 app.get '/', (req, res) ->
   res.render 'index'
 
+io.sockets.on 'connection', (socket) ->
+  io.sockets.emit('newChatter');
+  socket.on 'messageText', (data) ->
+    socket.emit('messageFromServer', data)
+    socket.broadcast.emit('messageFromServer', data)
+    console.log data
+
+  socket.on 'picture', (data) ->
+    socket.emit('pictureFromServer', data);
+    socket.broadcast.emit('pictureFromServer', data)
+    console.log data
 #expose app
 exports = module.exports = app
-
-

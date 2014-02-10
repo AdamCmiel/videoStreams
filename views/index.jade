@@ -6,6 +6,11 @@ html
     title Video Streams with webRTC
     meta(name='viewport', content='width=device-width, initial-scale=1')
   body
-    p Hello world! 
-    video(id='video' autoplay='true')
-    script(src='rtc.js')
+    h1 Snap Chat! 
+
+    video#video
+    button#startButton Take photo
+    canvas#canvas
+    script(src='jquery/jquery.js')
+    script(src='socket.io/socket.io.js')
+    script(src='app.js')
