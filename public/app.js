@@ -23,7 +23,7 @@ socket.on('messageFromServer', function(data){
 
 socket.on('pictureFromServer', function(data){
   console.log(data);
-  $('<img>').attr('src', data).appendTo($('body'));
+  $('#picture').attr('src', data).appendTo($('body'));
 });
 
 // From MDN
