@@ -9,8 +9,9 @@
   "author": "Adam Cmiel",
   "license": "MIT",
   "dependencies": {
-    "holla": "~0.6.2",
     "express": "~3.4.8",
-    "jade": "~1.1.5"
+    "jade": "~1.1.5",
+    "coffee-script": "~1.7.1",
+    "webrtc.io": "0.0.4"
   }
 }

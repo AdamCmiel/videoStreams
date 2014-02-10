@@ -1,10 +1,6 @@
-#app server js file
-
-#declare app
 express = require("express")
-
-#required libraries
 fs = require("fs")
+require('coffee-script')
 
 # passport = require("passport")
 # FacebookStrategy = require("passport-facebook").Strategy
@@ -30,7 +26,6 @@ app.configure ->
 
 app.use express.logger()
 
-#app.use(express.static(__dirname + '/public'));
 port = process.env.PORT or 5000
 app.listen port, ->
   console.log "Listening on " + port
@@ -40,3 +35,5 @@ app.get '/', (req, res) ->
 
 #expose app
 exports = module.exports = app
+
+

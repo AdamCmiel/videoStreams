@@ -5,6 +5,8 @@ express = require("express");
 
 fs = require("fs");
 
+require('coffee-script');
+
 app = express();
 
 app.configure(function() {
