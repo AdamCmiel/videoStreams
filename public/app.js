@@ -22,6 +22,7 @@ function gotStream(stream){
   callButton.disabled = false;
 }
 
+
 function call() {
   callButton.disabled = true;
 
@@ -32,7 +33,17 @@ function call() {
     console.log('Using audio device: ' + localStream.getAudioTracks()[0].label);
   }
 
-  var servers = null;
+  var STUN = {url: 'stun:stun.l.google.com:19302'};
+
+  var TURN = {
+    url: 'turn:homeo@turn.bistri.com:80',
+    credential: 'homeo'
+  };
+
+  var servers = {
+     iceServers: [STUN, TURN]
+  };
+
 
   localPeerConnection = new webkitRTCPeerConnection(servers);
   console.log(localPeerConnection)
