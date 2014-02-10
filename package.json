@@ -1,0 +1,16 @@
+{
+  "name": "videoStreams",
+  "version": "0.0.0",
+  "description": "real-time video streams with webRTC",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Adam Cmiel",
+  "license": "MIT",
+  "dependencies": {
+    "holla": "~0.6.2",
+    "express": "~3.4.8",
+    "jade": "~1.1.5"
+  }
+}
