@@ -13,6 +13,11 @@
     "jade": "~1.1.5",
     "coffee-script": "~1.7.1",
     "webrtc.io": "0.0.4",
-    "socket.io": "~0.9.16"
+    "socket.io": "~0.9.16",
+    "bower": "~1.2.8"
+  },
+  "scripts": {
+      "postinstall": "./node_modules/bower/bin/bower install"
   }
+
 }
