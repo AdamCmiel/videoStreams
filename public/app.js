@@ -14,6 +14,7 @@ navigator.getUserMedia = navigator.getUserMedia ||
     function(error) {
       console.log(error);
     });
+  
 //Everything above this line should be familiar from the previous example
 function gotStream(stream){
   localVideo.src = URL.createObjectURL(stream);
