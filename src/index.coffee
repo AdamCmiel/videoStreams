@@ -29,6 +29,7 @@ app.get '/chat/:id', (req, res) ->
 
 chatRoomId = 0
 userMap = {};
+usersInRoom = {};
 
 io.sockets.on 'connection', (socket) ->
   io.sockets.emit('newChatter');
@@ -37,14 +38,16 @@ io.sockets.on 'connection', (socket) ->
     socket.emit 'room_created', (chatRoomId++).toString()
 
   socket.on 'request_to_join', (data) ->
-    numSockets = Object.keys(io.sockets.in(data).sockets).length
+    usersInRoom[data] = 0 if usersInRoom[data] is undefined
+    numSockets = usersInRoom[data]
     console.log 'There are ', numSockets, ' in the room ', data
-    if numSockets <= 2
+    if numSockets < 2
       userMap[socket.id] = data;
+      usersInRoom[data] = usersInRoom[data] + 1;
       socket.join data
       socket.emit 'joined_room', data
     else 
-      socket.emit 'canot_join'
+      socket.emit 'canot_join', data
 
   socket.on 'setChatDescription', (data) ->
     socket.broadcast.to(userMap[socket.id]).emit('broadcastDescription', data)

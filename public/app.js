@@ -48,14 +48,15 @@ app.service('socket', function ($rootScope) {
 
 // ---------- Write Controller Logic ------------ //
 
-app.controller('VideoController', function($scope, $routeParams, $location, socket){
+app.controller('VideoController', function($scope, $routeParams, $window, socket){
 
   room_number = $routeParams.id;
 
   socket.emit('request_to_join', room_number);
 
-  socket.on('cannot_join', function(){
-    $location.path('/');
+  socket.on('cannot_join', function(data){
+    console.log('cannot join')
+    $window.location.href = '/';
   });
 
   socket.on('joined_room', function(data){
@@ -135,6 +136,7 @@ app.controller('VideoController', function($scope, $routeParams, $location, sock
 
 app.controller('IndexController', function($scope, $location, socket){
   socket.on('room_created', function(roomNum){
+    console.log('room created at '+roomNum);
     $location.path('/chat/'+roomNum);
   });
   $scope.openRoom = function(){
