@@ -37,11 +37,9 @@ app.get('/', function(req, res) {
 io.sockets.on('connection', function(socket) {
   io.sockets.emit('newChatter');
   socket.on('setChatDescription', function(data) {
-    console.log(data);
     return socket.broadcast.emit('broadcastDescription', data);
   });
   return socket.on('returnRemoteDescription', function(data) {
-    console.log(data);
     return socket.broadcast.emit('returnDescription', data);
   });
 });
