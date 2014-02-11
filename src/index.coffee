@@ -11,7 +11,6 @@ server = app.listen port, ->
 
 io = require("socket.io").listen(server)
 
-#middleware stack
 app.configure ->
   app.use express.bodyParser()
   app.use express.static(__dirname + "/public")
@@ -19,11 +18,6 @@ app.configure ->
   app.use express.favicon()
   app.set "views", __dirname + "/views"
   app.set "view engine", "jade"
-  # app.use stylus.middleware(
-  #   src: __dirname + "/public/styl"
-  #   compile: (str, path) ->
-  #     stylus(str).set("filename", path).use nib()
-  # )
 
 app.use express.logger()
 
@@ -32,14 +26,9 @@ app.get '/', (req, res) ->
 
 io.sockets.on 'connection', (socket) ->
   io.sockets.emit('newChatter');
-  socket.on 'messageText', (data) ->
-    socket.emit('messageFromServer', data)
-    socket.broadcast.emit('messageFromServer', data)
+  socket.on 'setChatDescription', (data) ->
     console.log data
-
-  socket.on 'picture', (data) ->
-    socket.emit('pictureFromServer', data);
-    socket.broadcast.emit('pictureFromServer', data)
+    socket.broadcast.emit('broadcastDescription', data)
+  socket.on 'returnRemoteDescription', (data) ->
     console.log data
-#expose app
-exports = module.exports = app
+    socket.broadcast.emit('returnDescription', data)
