@@ -1,6 +1,6 @@
 body {
   text-align: center;
-  background-color: #000;
+  background-color: #252525;
   color: #444;
 }
 
@@ -26,9 +26,15 @@ video{
   width: 80%;
 }
 
+.well {
+  width: 50%;
+  margin: 0 auto 0;
+}
+
 #callButton{
   position: absolute;
   margin: 25px;
   top: 0;
   left: 0;
 }
+
