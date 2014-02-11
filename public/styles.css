@@ -1,9 +1,10 @@
 body {
+  text-align: center;
   background-color: #000;
-  color: #FFF;
+  color: #444;
 }
 
-#localVideo, #remoteVideo{
+video{
   position: absolute;
 }
 
@@ -17,4 +18,17 @@ body {
 
 #callButton{
   z-index: 3;
+}
+
+.alert{
+  display: none;
+  margin: 25px auto 0;
+  width: 80%;
+}
+
+#callButton{
+  position: absolute;
+  margin: 25px;
+  top: 0;
+  left: 0;
 }

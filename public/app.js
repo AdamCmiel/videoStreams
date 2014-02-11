@@ -94,6 +94,11 @@ app.controller('VideoController', function($scope, $routeParams, $window, socket
   socket.on('returnDescription', function(data){
     description = new RTCSessionDescription(JSON.parse(data));
     localPeerConnection.setRemoteDescription(description);
+    $('.alert').fadeIn();
+    $('button').remove();
+    setTimeout(function(){
+      $('.alert').fadeOut().remove();
+    }, 1000);
   });
     
   function gotStream(stream){

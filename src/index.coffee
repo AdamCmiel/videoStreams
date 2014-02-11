@@ -1,7 +1,3 @@
-fs = require("fs")
-http = require("http")
-
-coffee = require('coffee-script')
 express = require("express")
 app = express()
 
