@@ -30,6 +30,12 @@ app.use express.logger()
 app.get '/', (req, res) ->
   res.render 'index'
 
+currentPicture = ''
+
+setInterval \
+  (-> io.sockets.emit('pictureFromServer', currentPicture)), \
+  (1000)
+
 io.sockets.on 'connection', (socket) ->
   io.sockets.emit('newChatter');
   socket.on 'messageText', (data) ->
@@ -38,6 +44,7 @@ io.sockets.on 'connection', (socket) ->
     console.log data
 
   socket.on 'picture', (data) ->
+    currentPicture = data
     socket.emit('pictureFromServer', data);
     socket.broadcast.emit('pictureFromServer', data)
     console.log data
