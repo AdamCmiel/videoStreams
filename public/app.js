@@ -50,7 +50,7 @@ app.service('socket', function ($rootScope) {
 
 app.controller('VideoController', function($scope, socket){
 
-  var localStream, localPeerConnection, remotePeerConnection; 
+  var localPeerConnection, remotePeerConnection; 
   var STUN = {url: 'stun:stun.l.google.com:19302'};
   var TURN = {
     url: 'turn:homeo@turn.bistri.com:80',
@@ -60,13 +60,19 @@ app.controller('VideoController', function($scope, socket){
      iceServers: [STUN, TURN]
   };
 
+  localPeerConnection = new webkitRTCPeerConnection(servers);
+  localPeerConnection.onicecandidate = gotLocalIceCandidate;
+  remotePeerConnection = new webkitRTCPeerConnection(servers);
+  remotePeerConnection.onicecandidate = gotRemoteIceCandidate;
+  remotePeerConnection.onaddstream = gotRemoteStream;
+
   navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
   navigator.getUserMedia({audio:true, video:true}, gotStream, function(error) {console.log(error);});
   
   //socket events
 
   socket.on('broadcastDescription', function(data){
-    call();
+    $scope.call();
     description = new RTCSessionDescription(JSON.parse(data));
     remotePeerConnection.setRemoteDescription(description);  
     remotePeerConnection.createAnswer(gotRemoteDescription);
@@ -78,8 +84,9 @@ app.controller('VideoController', function($scope, socket){
   });
     
   function gotStream(stream){
-    $scope.localURL = URL.createObjectURL(stream);
-    localStream = stream;
+    console.log('got stream');
+    $('#localVideo').attr('src', URL.createObjectURL(stream));
+    localPeerConnection.addStream(stream);
     $scope.buttonDisabled = false;
   }
 
@@ -94,7 +101,7 @@ app.controller('VideoController', function($scope, socket){
   }
 
   function gotRemoteStream(event){
-    $scope.remoteURL = URL.createObjectURL(event.stream);
+    $('#remoteVideo').attr('src', URL.createObjectURL(event.stream));
   }
 
   function gotLocalIceCandidate(event){
@@ -110,22 +117,15 @@ app.controller('VideoController', function($scope, socket){
   }
 
   $scope.call = function(){
-    localPeerConnection.addStream(localStream);
     localPeerConnection.createOffer(gotLocalDescription);
-    localPeerConnection = new webkitRTCPeerConnection(servers);
-    localPeerConnection.onicecandidate = gotLocalIceCandidate;
-    remotePeerConnection = new webkitRTCPeerConnection(servers);
-    remotePeerConnection.onicecandidate = gotRemoteIceCandidate;
-    remotePeerConnection.onaddstream = gotRemoteStream;
   }
 });
 
 app.controller('IndexController', function($scope, $location, socket){
-  socket.on('redirectToVideo', function(data){
-    var roomNum = JSON.parse(data);
+  socket.on('room_created', function(roomNum){
     $location.path('/chat/'+roomNum);
   });
   $scope.openRoom = function(){
-    socket.emit('roomRequest');
+    socket.emit('new_room');
   }
 })

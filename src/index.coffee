@@ -24,11 +24,28 @@ app.use express.logger()
 app.get '/', (req, res) ->
   res.render 'index'
 
+app.get '/chat/:id', (req, res) ->
+  res.redirect '/#chat/' + req.params.id
+
+chatRoomId = 0
+userMap = {};
+
 io.sockets.on 'connection', (socket) ->
   io.sockets.emit('newChatter');
+
+  socket.on 'new_room', ->
+    socket.emit 'room_created', (chatRoomId++).toString()
+
+  socket.on 'request_to_join', (data) ->
+    numSockets = io.sockets.in(data).length
+    if numSockets < 2
+      userMap[socket.id] = data;
+      socket.join data
+      socket.emit 'joined_room', data
+    else 
+      socket.emit 'canot_join'
+
   socket.on 'setChatDescription', (data) ->
-    console.log data
-    socket.broadcast.emit('broadcastDescription', data)
+    socket.broadcast.to(userMap[socket.id]).emit('broadcastDescription', data)
   socket.on 'returnRemoteDescription', (data) ->
-    console.log data
-    socket.broadcast.emit('returnDescription', data)
+    socket.broadcast.to(userMap[socket.id]).emit('returnDescription', data)
