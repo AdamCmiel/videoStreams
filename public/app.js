@@ -48,7 +48,19 @@ app.service('socket', function ($rootScope) {
 
 // ---------- Write Controller Logic ------------ //
 
-app.controller('VideoController', function($scope, socket){
+app.controller('VideoController', function($scope, $routeParams, $location, socket){
+
+  room_number = $routeParams.id;
+  
+  socket.emit('request_to_join', room_number);
+
+  socket.on('cannot_join', function(){
+    $location.path('/');
+  });
+
+  socket.on('joined_room', function(data){
+    console.log('joined room', data);
+  });
 
   var localPeerConnection, remotePeerConnection; 
   var STUN = {url: 'stun:stun.l.google.com:19302'};

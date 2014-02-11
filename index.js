@@ -49,8 +49,8 @@ io.sockets.on('connection', function(socket) {
   });
   socket.on('request_to_join', function(data) {
     var numSockets;
-    numSockets = io.sockets["in"](data).length;
-    if (numSockets < 2) {
+    numSockets = Object.keys(io.sockets["in"](data).sockets).length;
+    if (numSockets < 3) {
       userMap[socket.id] = data;
       socket.join(data);
       return socket.emit('joined_room', data);
