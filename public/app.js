@@ -51,7 +51,7 @@ app.service('socket', function ($rootScope) {
 app.controller('VideoController', function($scope, $routeParams, $location, socket){
 
   room_number = $routeParams.id;
-  
+
   socket.emit('request_to_join', room_number);
 
   socket.on('cannot_join', function(){

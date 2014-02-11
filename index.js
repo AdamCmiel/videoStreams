@@ -50,7 +50,8 @@ io.sockets.on('connection', function(socket) {
   socket.on('request_to_join', function(data) {
     var numSockets;
     numSockets = Object.keys(io.sockets["in"](data).sockets).length;
-    if (numSockets < 3) {
+    console.log('There are ', numSockets, ' in the room ', data);
+    if (numSockets <= 2) {
       userMap[socket.id] = data;
       socket.join(data);
       return socket.emit('joined_room', data);
