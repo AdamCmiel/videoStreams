@@ -1,5 +1,5 @@
 doctype
-html
+html(ng-app="VideoChat")
   head
     meta(charset='utf-8')
     meta(http-equiv='X-UA-Compatible', content='IE=edge')
@@ -7,11 +7,10 @@ html
     meta(name='viewport', content='width=device-width, initial-scale=1')
     link(href='styles.css' rel='stylesheet')
   body
-    button#callButton Make a call
-    video(id='localVideo' autoplay)
-    video(id='remoteVideo' autoplay)
-
+    div(ng-view="")
     script(src='jquery/jquery.js')
+    script(src='angular/angular.js')
+    script(src='angular-route/angular-route.js')
     script(src='socket.io/socket.io.js')
     script(src='resize.js')
     script(src='app.js')

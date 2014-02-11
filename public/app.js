@@ -1,85 +1,131 @@
-var socket = io.connect(window.location.hostname);
-var localStream, localPeerConnection, remotePeerConnection;
+// ------------ Write and expose app ------------ //
 
-var localVideo = document.getElementById("localVideo");
-var remoteVideo = document.getElementById("remoteVideo");
+var app = angular.module('VideoChat', ['ngRoute'])
 
-var callButton = document.getElementById("callButton");
+// ------------- Create App Routes -------------- //
 
-callButton.disabled = true;
-callButton.onclick = call;
-
-navigator.getUserMedia = navigator.getUserMedia ||
-    navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-  navigator.getUserMedia({audio:true, video:true}, gotStream, 
-    function(error) {
-      console.log(error);
+app.config(function($routeProvider, $locationProvider){
+  $locationProvider.html5Mode(true);
+  $routeProvider
+    .when('/', {
+      controller: 'IndexController',
+      templateUrl: "/templates/home.html"
+    })
+    .when('/chat/:id', {
+      controller: 'VideoController',
+      templateUrl: "/templates/video.html"
+    })
+    .otherwise({
+      redirectTo: '/'
     });
+});
+
+// ----------Create Socket Connection ----------- //
+
+app.service('socket', function ($rootScope) {
+  var socket = io.connect(window.location.hostname);
+  return {
+    on: function (eventName, callback) {
+      socket.on(eventName, function () {  
+        var args = arguments;
+        $rootScope.$apply(function () {
+          callback.apply(socket, args);
+        });
+      });
+    },
+    emit: function (eventName, data, callback) {
+      socket.emit(eventName, data, function () {
+        var args = arguments;
+        $rootScope.$apply(function () {
+          if (callback) {
+            callback.apply(socket, args);
+          }
+        });
+      })
+    }
+  };
+});
+
+// ---------- Write Controller Logic ------------ //
+
+app.controller('VideoController', function($scope, socket){
+
+  var localStream, localPeerConnection, remotePeerConnection; 
+  var STUN = {url: 'stun:stun.l.google.com:19302'};
+  var TURN = {
+    url: 'turn:homeo@turn.bistri.com:80',
+    credential: 'homeo'
+  };
+  var servers = {
+     iceServers: [STUN, TURN]
+  };
+
+  navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+  navigator.getUserMedia({audio:true, video:true}, gotStream, function(error) {console.log(error);});
   
-function gotStream(stream){
-  localVideo.src = URL.createObjectURL(stream);
-  localStream = stream;
-  callButton.disabled = false;
-}
+  //socket events
 
-var STUN = {url: 'stun:stun.l.google.com:19302'};
+  socket.on('broadcastDescription', function(data){
+    call();
+    description = new RTCSessionDescription(JSON.parse(data));
+    remotePeerConnection.setRemoteDescription(description);  
+    remotePeerConnection.createAnswer(gotRemoteDescription);
+  });
 
-var TURN = {
-  url: 'turn:homeo@turn.bistri.com:80',
-  credential: 'homeo'
-};
+  socket.on('returnDescription', function(data){
+    description = new RTCSessionDescription(JSON.parse(data));
+    localPeerConnection.setRemoteDescription(description);
+  });
+    
+  function gotStream(stream){
+    $scope.localURL = URL.createObjectURL(stream);
+    localStream = stream;
+    $scope.buttonDisabled = false;
+  }
 
-var servers = {
-   iceServers: [STUN, TURN]
-};
+  function gotLocalDescription(description){
+    localPeerConnection.setLocalDescription(description);
+    socket.emit('setChatDescription', JSON.stringify(description));
+  }
 
-localPeerConnection = new webkitRTCPeerConnection(servers);
-localPeerConnection.onicecandidate = gotLocalIceCandidate;
+  function gotRemoteDescription(description){
+    remotePeerConnection.setLocalDescription(description);
+    socket.emit('returnRemoteDescription', JSON.stringify(description));
+  }
 
-remotePeerConnection = new webkitRTCPeerConnection(servers);
-remotePeerConnection.onicecandidate = gotRemoteIceCandidate;
-remotePeerConnection.onaddstream = gotRemoteStream;
+  function gotRemoteStream(event){
+    $scope.remoteURL = URL.createObjectURL(event.stream);
+  }
 
-function call() {
-  callButton.disabled = true;
-  localPeerConnection.addStream(localStream);
-  localPeerConnection.createOffer(gotLocalDescription);
-}
+  function gotLocalIceCandidate(event){
+    if (event.candidate) {
+      remotePeerConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
+    }
+  }
 
-function gotLocalDescription(description){
-  localPeerConnection.setLocalDescription(description);
-  socket.emit('setChatDescription', JSON.stringify(description));
-}
+  function gotRemoteIceCandidate(event){
+    if (event.candidate) {
+      localPeerConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
+    }
+  }
 
-socket.on('broadcastDescription', function(data){
-  call();
-  description = new RTCSessionDescription(JSON.parse(data));
-  remotePeerConnection.setRemoteDescription(description);  //remotePeer was undefined
-  remotePeerConnection.createAnswer(gotRemoteDescription);
+  $scope.call = function(){
+    localPeerConnection.addStream(localStream);
+    localPeerConnection.createOffer(gotLocalDescription);
+    localPeerConnection = new webkitRTCPeerConnection(servers);
+    localPeerConnection.onicecandidate = gotLocalIceCandidate;
+    remotePeerConnection = new webkitRTCPeerConnection(servers);
+    remotePeerConnection.onicecandidate = gotRemoteIceCandidate;
+    remotePeerConnection.onaddstream = gotRemoteStream;
+  }
 });
 
-function gotRemoteDescription(description){
-  remotePeerConnection.setLocalDescription(description);
-  socket.emit('returnRemoteDescription', JSON.stringify(description));
-}
-
-socket.on('returnDescription', function(data){
-  description = new RTCSessionDescription(JSON.parse(data));
-  localPeerConnection.setRemoteDescription(description);
-});
-
-function gotRemoteStream(event){
-  remoteVideo.src = URL.createObjectURL(event.stream);
-}
-
-function gotLocalIceCandidate(event){
-  if (event.candidate) {
-    remotePeerConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
+app.controller('IndexController', function($scope, $location, socket){
+  socket.on('redirectToVideo', function(data){
+    var roomNum = JSON.parse(data);
+    $location.path('/chat/'+roomNum);
+  });
+  $scope.openRoom = function(){
+    socket.emit('roomRequest');
   }
-}
-
-function gotRemoteIceCandidate(event){
-  if (event.candidate) {
-    localPeerConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
-  }
-}
+})
