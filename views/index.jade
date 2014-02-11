@@ -5,14 +5,13 @@ html
     meta(http-equiv='X-UA-Compatible', content='IE=edge')
     title Video Streams with webRTC
     meta(name='viewport', content='width=device-width, initial-scale=1')
-    script(src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js')
+    link(href='styles.css' rel='stylesheet')
   body
-    h1 Video Chat! 
-
+    button#callButton Make a call
     video(id='localVideo' autoplay)
     video(id='remoteVideo' autoplay)
-    button#callButton Make a call
 
-    //- script(src='jquery/jquery.js')
+    script(src='jquery/jquery.js')
     script(src='socket.io/socket.io.js')
+    script(src='resize.js')
     script(src='app.js')

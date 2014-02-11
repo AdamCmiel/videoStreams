@@ -1,0 +1,19 @@
+body {
+  background-color: #000;
+}
+
+#localVideo, #remoteVideo{
+  position: absolute;
+}
+
+#localVideo {
+  z-index: 2;
+}
+
+#remoteVideo {
+  z-index: 1;
+}
+
+#callButton{
+  z-index: 3;
+}
